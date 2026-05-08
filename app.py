@@ -12,12 +12,12 @@ import sys
 # Agregar el directorio al path
 sys.path.append(str(Path(__file__).parent))
 
-from utils.data_loader import load_and_clean_data
-from utils.metrics import calculate_all_metrics
-from utils.psychology import analyze_psychology
-from utils.temporal import analyze_temporal
-from utils.alerts import generate_alerts
-from utils.report import generate_coach_report
+from data_loader import load_and_clean_data
+from metrics import calculate_all_metrics
+from psychology import analyze_psychology
+from temporal import analyze_temporal
+from alerts import generate_alerts
+from report import generate_coach_report
 
 # ── Configuración de página ──────────────────────────────────────────────────
 st.set_page_config(
