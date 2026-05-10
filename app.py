@@ -33,7 +33,7 @@ with open("assets/style.css") as f:
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.image("assets/logo.png", use_column_width=True)
+    # st.image("assets/logo.png", use_column_width=True)
     st.markdown("## 🥇 XAUUSD Intel")
     st.markdown("---")
     
