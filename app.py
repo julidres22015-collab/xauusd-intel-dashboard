@@ -65,7 +65,7 @@ with st.sidebar:
 # ── Main Content ─────────────────────────────────────────────────────────────
 if uploaded_file is None:
     # Pantalla de bienvenida
-    _render_welcome()
+    # _render_welcome()
 else:
     with st.spinner("⚙️ Procesando historial..."):
         df = load_and_clean_data(uploaded_file)
