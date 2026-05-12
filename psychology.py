@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def analyze_psychology(df: pd.DataFrame):
+def analyze_psychology(df: pd.DataFrame, min_duration_impulse=None):
     if df is None or df.empty:
         return {
             "alerts": [],
