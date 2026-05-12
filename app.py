@@ -114,7 +114,7 @@ tabs = st.tabs([
 
 with tabs[0]:
     st.subheader("Resumen general")
-    st.write(metrics)
+    st.write(df.head())
     st.dataframe(df)
 
 with tabs[1]:
@@ -127,7 +127,7 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("PnL")
-    st.write(metrics)
+    st.write(df.describe())
 
 with tabs[4]:
     st.subheader("Alertas")
