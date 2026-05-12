@@ -102,29 +102,29 @@ else:
         "🏷️ Etiquetas"
     ])
     
-with tabs[0]:
-    st.subheader("Resumen general")
-    st.write(metrics)
-    st.dataframe(df)
-
 with tabs[1]:
-    _render_psychology(df, psych)
+    st.subheader("Psicología")
+    st.write(psych)
 
 with tabs[2]:
-    _render_temporal(df, temporal)
+    st.subheader("Temporal")
+    st.write(temporal)
 
 with tabs[3]:
-    _render_pnl(df, metrics)
+    st.subheader("PnL")
+    st.write(metrics)
 
 with tabs[4]:
-    _render_alerts(alerts)
+    st.subheader("Alertas")
+    st.write(alerts)
 
 with tabs[5]:
-    _render_report(report)
+    st.subheader("Reporte")
+    st.write(report)
 
 with tabs[6]:
-    _render_labels(df)
-
+    st.subheader("Labels")
+    st.dataframe(df)
 
 def _render_welcome():
     """Pantalla de inicio cuando no hay datos"""
