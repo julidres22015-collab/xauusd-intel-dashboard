@@ -5,67 +5,126 @@ def load_and_clean_data(uploaded_file):
     if uploaded_file is None:
         return pd.DataFrame()
 
+    # Leer archivo completo sin encabezados
     if uploaded_file.name.endswith(".csv"):
-        df = pd.read_csv(uploaded_file)
+        raw = pd.read_csv(uploaded_file, header=None)
     else:
-        df = pd.read_excel(uploaded_file)
+        raw = pd.read_excel(uploaded_file, header=None)
 
-    df.columns = [str(c).strip().lower().replace(" ", "_") for c in df.columns]
+    # Buscar fila donde empieza la tabla de operaciones
+    header_row = None
+    for i in range(len(raw)):
+        row_values = raw.iloc[i].astype(str).str.lower().tolist()
+        row_text = " ".join(row_values)
 
-    # Intento básico de normalización de columnas comunes de MT5
+        if ("time" in row_text or "tiempo" in row_text or "fecha" in row_text) and (
+            "profit" in row_text or "beneficio" in row_text
+        ):
+            header_row = i
+            break
+
+    if header_row is None:
+        # Si no encuentra encabezado, intentar lectura normal
+        uploaded_file.seek(0)
+        df = pd.read_excel(uploaded_file) if not uploaded_file.name.endswith(".csv") else pd.read_csv(uploaded_file)
+    else:
+        # Usar esa fila como encabezado
+        df = raw.iloc[header_row + 1:].copy()
+        df.columns = raw.iloc[header_row].astype(str).str.strip()
+
+    # Limpiar columnas vacías
+    df = df.dropna(how="all")
+    df = df.loc[:, ~df.columns.astype(str).str.contains("^Unnamed", case=False, regex=True)]
+
+    # Normalizar nombres
+    df.columns = [
+        str(c).strip().lower()
+        .replace(" ", "_")
+        .replace("/", "_")
+        .replace(".", "")
+        .replace(":", "")
+        for c in df.columns
+    ]
+
+    # Mapear columnas comunes de MT5
     rename_map = {
         "time": "open_time",
-        "open_time": "open_time",
-        "close_time": "close_time",
+        "tiempo": "open_time",
+        "fecha": "open_time",
+        "deal": "ticket",
+        "orden": "ticket",
+        "order": "ticket",
         "symbol": "symbol",
+        "símbolo": "symbol",
+        "simbolo": "symbol",
         "type": "type",
+        "tipo": "type",
         "volume": "volume",
+        "volumen": "volume",
         "price": "entry_price",
-        "price_open": "entry_price",
-        "price_close": "close_price",
+        "precio": "entry_price",
+        "s_l": "sl",
+        "sl": "sl",
+        "t_p": "tp",
+        "tp": "tp",
         "profit": "net_profit",
+        "beneficio": "net_profit",
         "commission": "commission",
+        "comisión": "commission",
+        "comision": "commission",
         "swap": "swap",
-        "s/l": "sl",
-        "t/p": "tp",
     }
 
     df = df.rename(columns={c: rename_map.get(c, c) for c in df.columns})
 
+    # Si hay varias columnas price, dejar la primera como entry_price
+    if "entry_price" not in df.columns:
+        price_cols = [c for c in df.columns if "price" in c or "precio" in c]
+        if price_cols:
+            df["entry_price"] = pd.to_numeric(df[price_cols[0]], errors="coerce")
+
     # Profit
     if "net_profit" not in df.columns:
-        possible_profit = [c for c in df.columns if "profit" in c or "beneficio" in c]
-        if possible_profit:
-            df["net_profit"] = pd.to_numeric(df[possible_profit[0]], errors="coerce")
+        profit_cols = [c for c in df.columns if "profit" in c or "beneficio" in c]
+        if profit_cols:
+            df["net_profit"] = pd.to_numeric(df[profit_cols[-1]], errors="coerce")
         else:
             df["net_profit"] = 0
 
     df["net_profit"] = pd.to_numeric(df["net_profit"], errors="coerce").fillna(0)
-    df["is_winner"] = df["net_profit"] > 0
+
+    # Eliminar filas que no sean operaciones reales
+    if "type" in df.columns:
+        df["type"] = df["type"].astype(str).str.lower()
+        df = df[df["type"].isin(["buy", "sell", "compra", "venta"])]
+
+    # Si no hay type, filtrar por profit distinto de 0
+    if df.empty:
+        return pd.DataFrame()
 
     # Fechas
-    date_cols = [c for c in df.columns if "time" in c or "fecha" in c or "hora" in c]
-    for c in date_cols:
-        df[c] = pd.to_datetime(df[c], errors="coerce")
-
     if "open_time" in df.columns:
-        df["hour"] = df["open_time"].dt.hour
-        df["date"] = df["open_time"].dt.date
-        df["weekday_num"] = df["open_time"].dt.weekday
-        df["weekday"] = df["open_time"].dt.day_name()
+        df["open_time"] = pd.to_datetime(df["open_time"], errors="coerce")
     else:
-        df["hour"] = 0
-        df["date"] = pd.Timestamp.today().date()
-        df["weekday_num"] = 0
-        df["weekday"] = "N/A"
+        date_cols = [c for c in df.columns if "time" in c or "fecha" in c]
+        if date_cols:
+            df["open_time"] = pd.to_datetime(df[date_cols[0]], errors="coerce")
+        else:
+            df["open_time"] = pd.NaT
 
-    # Duración
-    if "open_time" in df.columns and "close_time" in df.columns:
-        df["duration_minutes"] = (df["close_time"] - df["open_time"]).dt.total_seconds() / 60
-    else:
-        df["duration_minutes"] = np.nan
+    df = df.dropna(subset=["open_time"])
 
-    # Sesiones aproximadas hora Colombia
+    # Métricas derivadas
+    df["is_winner"] = df["net_profit"] > 0
+    df["hour"] = df["open_time"].dt.hour
+    df["date"] = df["open_time"].dt.date
+    df["weekday_num"] = df["open_time"].dt.weekday
+    df["weekday"] = df["open_time"].dt.day_name()
+
+    # Duración: si no hay cierre, se deja vacío
+    df["duration_minutes"] = np.nan
+
+    # Sesiones aproximadas Colombia
     def get_session(hour):
         if 18 <= hour or hour < 2:
             return "Asia"
@@ -73,11 +132,13 @@ def load_and_clean_data(uploaded_file):
             return "Londres"
         elif 7 <= hour < 12:
             return "Nueva York"
-        elif 7 <= hour < 10:
-            return "Solapamiento"
         else:
             return "Fuera de sesión"
 
     df["session"] = df["hour"].apply(get_session)
 
-    return df
+    # Volumen
+    if "volume" in df.columns:
+        df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
+
+    return df.reset_index(drop=True)
