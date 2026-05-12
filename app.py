@@ -64,8 +64,8 @@ with st.sidebar:
 
 # ── Main Content ─────────────────────────────────────────────────────────────
 if uploaded_file is None:
-    # Pantalla de bienvenida
-    pass
+    st.title("XAUUSD Intel Dashboard")
+    st.write("Sube tu historial de operaciones para comenzar el análisis.")
 else:
     with st.spinner("⚙️ Procesando historial..."):
         df = load_and_clean_data(uploaded_file)
