@@ -102,6 +102,21 @@ else:
         "🏷️ Etiquetas"
     ])
     
+tabs = st.tabs([
+    "Resumen",
+    "Psicología",
+    "Temporal",
+    "PnL",
+    "Alertas",
+    "Reporte",
+    "Labels"
+])
+
+with tabs[0]:
+    st.subheader("Resumen general")
+    st.write(metrics)
+    st.dataframe(df)
+
 with tabs[1]:
     st.subheader("Psicología")
     st.write(psych)
