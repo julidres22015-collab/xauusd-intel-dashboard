@@ -1,6 +1,6 @@
 import pandas as pd
 
-def analyze_temporal(df: pd.DataFrame):
+def analyze_temporal(df: pd.DataFrame, timezone=None):
     if df is None or df.empty:
         return {}
 
