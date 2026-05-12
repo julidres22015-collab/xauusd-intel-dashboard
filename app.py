@@ -102,13 +102,28 @@ else:
         "🏷️ Etiquetas"
     ])
     
-    with tabs[0]: _render_overview(df, metrics)
-    with tabs[1]: _render_psychology(df, psych)
-    with tabs[2]: _render_temporal(df, temporal)
-    with tabs[3]: _render_pnl(df, metrics)
-    with tabs[4]: _render_alerts(alerts)
-    with tabs[5]: _render_report(report)
-    with tabs[6]: _render_labels(df)
+with tabs[0]:
+    st.subheader("Resumen general")
+    st.write(metrics)
+    st.dataframe(df)
+
+with tabs[1]:
+    _render_psychology(df, psych)
+
+with tabs[2]:
+    _render_temporal(df, temporal)
+
+with tabs[3]:
+    _render_pnl(df, metrics)
+
+with tabs[4]:
+    _render_alerts(alerts)
+
+with tabs[5]:
+    _render_report(report)
+
+with tabs[6]:
+    _render_labels(df)
 
 
 def _render_welcome():
