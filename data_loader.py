@@ -101,8 +101,20 @@ def load_and_clean_data(uploaded_file):
         df["open_time"] = pd.to_datetime(df["open_time"], errors="coerce")
     else:
         date_cols = [c for c in df.columns if "time" in c or "fecha" in c or "tiempo" in c]
-        if date_cols:
-            df["open_time"] = pd.to_datetime(df[date_cols[0]], errors="coerce")
+
+if len(date_cols) > 0:
+    first_date_col = date_cols[0]
+
+    if isinstance(df[first_date_col], pd.DataFrame):
+        df["open_time"] = pd.to_datetime(
+            df[first_date_col].iloc[:, 0],
+            errors="coerce"
+        )
+    else:
+        df["open_time"] = pd.to_datetime(
+            df[first_date_col],
+            errors="coerce"
+        )
         else:
             df["open_time"] = pd.NaT
 
