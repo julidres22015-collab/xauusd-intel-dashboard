@@ -61,7 +61,11 @@ with st.sidebar:
     
     st.markdown("---")
     st.caption("v2.0 · XAUUSD Intel System")
-
+    
+uploaded_file = st.file_uploader(
+    "Sube tu historial de operaciones",
+    type=["xlsx", "csv"]
+)
 # ── Main Content ─────────────────────────────────────────────────────────────
 if uploaded_file is None:
     st.title("XAUUSD Intel Dashboard")
