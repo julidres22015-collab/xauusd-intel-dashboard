@@ -51,6 +51,8 @@ def load_and_clean_data(uploaded_file):
         for c in df.columns
     ]
 
+    df = df.loc[:, ~df.columns.duplicated()]
+
     rename_map = {
         "time": "open_time",
         "tiempo": "open_time",
@@ -81,6 +83,8 @@ def load_and_clean_data(uploaded_file):
 
     df = df.rename(columns={c: rename_map.get(c, c) for c in df.columns})
 
+    df = df.loc[:, ~df.columns.duplicated()]
+
     if "net_profit" not in df.columns:
         profit_cols = [c for c in df.columns if "profit" in c or "beneficio" in c]
         if profit_cols:
@@ -102,23 +106,16 @@ def load_and_clean_data(uploaded_file):
     else:
         date_cols = [c for c in df.columns if "time" in c or "fecha" in c or "tiempo" in c]
 
-if len(date_cols) > 0:
-    first_date_col = date_cols[0]
-
-    if isinstance(df[first_date_col], pd.DataFrame):
-        df["open_time"] = pd.to_datetime(
-            df[first_date_col].iloc[:, 0],
-            errors="coerce"
-        )
-    else:
-        df["open_time"] = pd.to_datetime(
-            df[first_date_col],
-            errors="coerce"
-        )
+        if len(date_cols) > 0:
+            first_date_col = date_cols[0]
+            df["open_time"] = pd.to_datetime(df[first_date_col], errors="coerce")
         else:
             df["open_time"] = pd.NaT
 
     df = df.dropna(subset=["open_time"])
+
+    if df.empty:
+        return pd.DataFrame()
 
     df["is_winner"] = df["net_profit"] > 0
     df["hour"] = df["open_time"].dt.hour
