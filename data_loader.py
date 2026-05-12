@@ -14,8 +14,8 @@ def load_and_clean_data(uploaded_file):
     # Buscar fila donde empieza la tabla de operaciones
     header_row = None
     for i in range(len(raw)):
-        row_values = raw.iloc[i].astype(str).str.lower().tolist()
-        row_text = " ".join(row_values)
+    row_values = raw.iloc[i].fillna("").astype(str).str.lower().tolist()
+    row_text = " ".join(map(str, row_values))
 
         if ("time" in row_text or "tiempo" in row_text or "fecha" in row_text) and (
             "profit" in row_text or "beneficio" in row_text
